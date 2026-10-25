@@ -183,6 +183,10 @@ def ipadapter_attention(out, q, k, v, extra_options, module_key='', ipadapter=No
         ip_k = torch.cat([(k_cond, k_uncond)[i] for i in cond_or_uncond], dim=0)
         ip_v = torch.cat([(v_cond, v_uncond)[i] for i in cond_or_uncond], dim=0)
 
+    # cast to the UNet's compute dtype (fp32 on manual-cast GPUs like Pascal) to avoid SDPA mixed-dtype errors
+    ip_k = ip_k.to(dtype=q.dtype)
+    ip_v = ip_v.to(dtype=q.dtype)
+
     if embeds_scaling == 'K+mean(V) w/ C penalty':
         scaling = float(ip_k.shape[2]) / 1280.0
         weight = weight * scaling
